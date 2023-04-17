@@ -60,8 +60,13 @@ func (u *User) AfterFind(db *gorm.DB) (err error) {
 		u.Role = GUEST
 		u.Disabled = true
 	}
-	u.Permission = 8 + 16 + 32 + 64 + 128
-	u.BasePath = "bcs-src/blob/" + strings.ReplaceAll(u.Username, "@", ".")
+	if u.Privilege == SiteAdmin {
+		u.Permission = 0x0fffffff
+		u.BasePath = ""
+	} else {
+		u.Permission = 8 + 16 + 32 + 64 + 128
+		u.BasePath = "bcs-src/blob/" + strings.ReplaceAll(u.Username, "@", ".")
+	}
 	return
 }
 

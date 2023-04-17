@@ -54,13 +54,11 @@ BuildWinArm64() {
 
 BuildDev() {
   rm -rf .git/
-  xgo -targets=linux/amd64,windows/amd64,darwin/amd64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
+  xgo -targets=linux/amd64-out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   mkdir -p "dist"
   mv alist-* dist
   cd dist
   upx -9 ./alist-linux*
-  cp ./alist-windows-amd64.exe ./alist-windows-amd64-upx.exe
-  upx -9 ./alist-windows-amd64-upx.exe
   find . -type f -print0 | xargs -0 md5sum >md5.txt
   cat md5.txt
 }
