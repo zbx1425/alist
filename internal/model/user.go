@@ -12,13 +12,26 @@ const (
 	ADMIN
 )
 
+type Privilege int
+
+const (
+	Normal    Privilege = 0
+	Validator Privilege = 10
+	Moderator Privilege = 50
+	SiteAdmin Privilege = 100
+)
+
 type User struct {
-	ID       uint   `json:"id" gorm:"primaryKey"`                      // unique key
-	Username string `json:"username" gorm:"unique" binding:"required"` // username
-	Password string `json:"password"`                                  // password
-	BasePath string `json:"base_path"`                                 // base path
-	Role     int    `json:"role"`                                      // user's role
-	Disabled bool   `json:"disabled"`
+	ID uint `json:"id" gorm:"primaryKey"`
+
+	Username string `json:"username" gorm:"column:email" binding:"required"`
+
+	Password  string `xml:"-" json:"password"`
+	Privilege Privilege
+
+	BasePath string `json:"base_path" gorm:"-"` // base path
+	Role     int    `json:"role" gorm:"-"`      // user's role
+	Disabled bool   `json:"disabled" gorm:"-"`
 	// Determine permissions by bit
 	//   0: can see hidden files
 	//   1: can access without password
@@ -31,24 +44,28 @@ type User struct {
 	//   8: webdav read
 	//   9: webdav write
 	//  10: can add qbittorrent tasks
-	Permission int32  `json:"permission"`
-	OtpSecret  string `json:"-"`
-	SsoID      string `json:"sso_id"`
+	Permission int32  `json:"permission" gorm:"-"`
+	OtpSecret  string `json:"-" gorm:"-"`
+	SsoID      string `json:"sso_id" gorm:"-"`
+}
+
+func (User) TableName() string {
+	return "uploaders"
 }
 
 func (u User) IsGuest() bool {
-	return u.Role == GUEST
+	return u.Privilege < Normal
 }
 
 func (u User) IsAdmin() bool {
-	return u.Role == ADMIN
+	return u.Privilege == SiteAdmin
 }
 
 func (u User) ValidatePassword(password string) error {
 	if password == "" {
 		return errors.WithStack(errs.EmptyPassword)
 	}
-	if u.Password != password {
+	if !BCryptValidateHash(password, u.Password) {
 		return errors.WithStack(errs.WrongPassword)
 	}
 	return nil

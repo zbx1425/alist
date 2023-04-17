@@ -6,7 +6,15 @@ import (
 )
 
 func GetUserByRole(role int) (*model.User, error) {
-	user := model.User{Role: role}
+	var priv model.Privilege
+	if role == model.ADMIN {
+		priv = model.SiteAdmin
+	} else if role == model.GUEST {
+		priv = model.Normal - 1
+	} else {
+		priv = model.Normal
+	}
+	user := model.User{Privilege: priv}
 	if err := db.Where(user).Take(&user).Error; err != nil {
 		return nil, err
 	}
@@ -22,11 +30,12 @@ func GetUserByName(username string) (*model.User, error) {
 }
 
 func GetUserBySSOID(ssoID string) (*model.User, error) {
-	user := model.User{SsoID: ssoID}
-	if err := db.Where(user).First(&user).Error; err != nil {
-		return nil, errors.Wrapf(err, "The single sign on platform is not bound to any users")
-	}
-	return &user, nil
+	// user := model.User{SsoID: ssoID}
+	// if err := db.Where(user).First(&user).Error; err != nil {
+	return nil, errors.Wrapf(errors.New("Users are managed by OBPKG!"),
+		"The single sign on platform is not bound to any users")
+	// }
+	// return &user, nil
 }
 
 func GetUserById(id uint) (*model.User, error) {
@@ -38,11 +47,13 @@ func GetUserById(id uint) (*model.User, error) {
 }
 
 func CreateUser(u *model.User) error {
-	return errors.WithStack(db.Create(u).Error)
+	// return errors.WithStack(db.Create(u).Error)
+	return errors.New("Users are managed by OBPKG!")
 }
 
 func UpdateUser(u *model.User) error {
-	return errors.WithStack(db.Save(u).Error)
+	// return errors.WithStack(db.Save(u).Error)
+	return errors.New("Users are managed by OBPKG!")
 }
 
 func GetUsers(pageIndex, pageSize int) (users []model.User, count int64, err error) {
@@ -57,5 +68,6 @@ func GetUsers(pageIndex, pageSize int) (users []model.User, count int64, err err
 }
 
 func DeleteUserById(id uint) error {
-	return errors.WithStack(db.Delete(&model.User{}, id).Error)
+	// return errors.WithStack(db.Delete(&model.User{}, id).Error)
+	return errors.New("Users are managed by OBPKG!")
 }

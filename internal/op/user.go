@@ -28,14 +28,18 @@ func GetAdmin() (*model.User, error) {
 }
 
 func GetGuest() (*model.User, error) {
-	if guestUser == nil {
-		user, err := db.GetUserByRole(model.GUEST)
-		if err != nil {
-			return nil, err
-		}
-		guestUser = user
-	}
-	return guestUser, nil
+	return &model.User{
+		ID:         0,
+		Username:   "Guest",
+		Password:   "",
+		Privilege:  -1,
+		BasePath:   "",
+		Role:       model.GUEST,
+		Disabled:   true,
+		Permission: 0,
+		OtpSecret:  "",
+		SsoID:      "",
+	}, nil
 }
 
 func GetUserByRole(role int) (*model.User, error) {

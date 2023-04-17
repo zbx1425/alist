@@ -3,7 +3,6 @@ package bootstrap
 import (
 	"fmt"
 	stdlog "log"
-	"strings"
 	"time"
 
 	"github.com/alist-org/alist/v3/cmd/flags"
@@ -12,7 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
@@ -41,19 +39,10 @@ func InitDB() {
 	var dB *gorm.DB
 	var err error
 	if flags.Dev {
-		dB, err = gorm.Open(sqlite.Open("file::memory:?cache=shared"), gormConfig)
-		conf.Conf.Database.Type = "sqlite3"
+		// REMOVED
 	} else {
 		database := conf.Conf.Database
 		switch database.Type {
-		case "sqlite3":
-			{
-				if !(strings.HasSuffix(database.DBFile, ".db") && len(database.DBFile) > 3) {
-					log.Fatalf("db name error.")
-				}
-				dB, err = gorm.Open(sqlite.Open(fmt.Sprintf("%s?_journal=WAL&_vacuum=incremental",
-					database.DBFile)), gormConfig)
-			}
 		case "mysql":
 			{
 				dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&tls=%s",
