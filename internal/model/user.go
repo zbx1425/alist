@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/alist-org/alist/v3/internal/conf"
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
@@ -63,9 +64,13 @@ func (u *User) AfterFind(db *gorm.DB) (err error) {
 	if u.Privilege == SiteAdmin {
 		u.Permission = 0x0fffffff
 		u.BasePath = ""
+	} else if u.Username == "public@domain" {
+		u.Permission = 0x0fffffff
+		u.BasePath = conf.Conf.UserDirPrefix + "/bcs-src/blob/"
 	} else {
 		u.Permission = 8 + 16 + 32 + 64 + 128
-		u.BasePath = "bcs-src/blob/" + strings.ReplaceAll(u.Username, "@", ".")
+		u.BasePath = conf.Conf.UserDirPrefix + "/bcs-src/blob/" +
+			strings.ReplaceAll(strings.ToLower(u.Username), "@", ".")
 	}
 	return
 }
