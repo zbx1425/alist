@@ -217,7 +217,48 @@ func Get(ctx context.Context, storage driver.Driver, path string) (model.Obj, er
 		}
 	}
 	log.Debugf("cant find obj with name: %s", name)
+
+	log.Debugf("under dir: %s", dir)
+	if stdpath.Base(dir) == "blob" {
+		log.Debugf("Making dir: %s", path)
+		if err := MakeDirNonRec(ctx, storage, path); err != nil {
+			return nil, err
+		}
+		log.Debugf("Making dir %s is ok", path)
+		return Get(ctx, storage, path)
+	}
+
 	return nil, errors.WithStack(errs.ObjectNotFound)
+}
+
+func MakeDirNonRec(ctx context.Context, storage driver.Driver, path string) error {
+	parentPath, dirName := stdpath.Split(path)
+	parentDir, err := GetUnwrap(ctx, storage, parentPath)
+	// this should not happen
+	if err != nil {
+		return errors.WithMessagef(err, "failed to get parent dir [%s]", parentPath)
+	}
+
+	switch s := storage.(type) {
+	case driver.MkdirResult:
+		var newObj model.Obj
+		newObj, err = s.MakeDir(ctx, parentDir, dirName)
+		if err == nil {
+			if newObj != nil {
+				addCacheObj(storage, parentPath, model.WrapObjName(newObj))
+			} else {
+				ClearCache(storage, parentPath)
+			}
+		}
+	case driver.Mkdir:
+		err = s.MakeDir(ctx, parentDir, dirName)
+		if err == nil {
+			ClearCache(storage, parentPath)
+		}
+	default:
+		return errs.NotImplement
+	}
+	return errors.WithStack(err)
 }
 
 func GetUnwrap(ctx context.Context, storage driver.Driver, path string) (model.Obj, error) {
