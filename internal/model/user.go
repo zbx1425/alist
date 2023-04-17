@@ -16,8 +16,6 @@ type Privilege int
 
 const (
 	Normal    Privilege = 0
-	Validator Privilege = 10
-	Moderator Privilege = 50
 	SiteAdmin Privilege = 100
 )
 
