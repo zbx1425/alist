@@ -4,6 +4,8 @@ import (
 	"github.com/alist-org/alist/v3/internal/errs"
 	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	"strings"
 )
 
 const (
@@ -49,6 +51,18 @@ type User struct {
 
 func (User) TableName() string {
 	return "uploaders"
+}
+
+func (u *User) AfterFind(db *gorm.DB) (err error) {
+	if u.Privilege == SiteAdmin {
+		u.Role = ADMIN
+	} else if u.Privilege < 0 {
+		u.Role = GUEST
+		u.Disabled = true
+	}
+	u.Permission = 8 + 16 + 32 + 64 + 128
+	u.BasePath = "bcs-src/blob/" + strings.ReplaceAll(u.Username, "@", ".")
+	return
 }
 
 func (u User) IsGuest() bool {
