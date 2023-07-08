@@ -3,6 +3,7 @@ package handles
 import (
 	"bytes"
 	"encoding/base64"
+	"github.com/alist-org/alist/v3/internal/fs"
 	"image/png"
 	"time"
 
@@ -67,6 +68,20 @@ func Login(c *gin.Context) {
 		common.ErrorResp(c, err, 400, true)
 		return
 	}
+
+	reqPath, err := user.JoinPath("/")
+	if err != nil {
+		common.ErrorResp(c, err, 403)
+		return
+	}
+	_, err = fs.Get(c, reqPath, &fs.GetArgs{})
+	if err != nil {
+		if err := fs.MakeDir(c, reqPath); err != nil {
+			common.ErrorResp(c, err, 500)
+			return
+		}
+	}
+
 	common.SuccessResp(c, gin.H{"token": token})
 	loginCache.Del(ip)
 }
